@@ -1,12 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_app/canvas/data/canvas_object.dart';
-import 'package:flutter_app/elements/to_drawing_object.dart';
+import 'dart:ui' as ui;
 
-class DrawingPainter extends CustomPainter {
+import 'package:flutter/material.dart';
+import 'package:paint_app/canvas/data/canvas_object.dart';
+import 'package:paint_app/canvas/elements/to_drawing_object.dart';
+
+class CanvasPainter extends CustomPainter {
   final List<CanvasObject> elenents;
   final CanvasObject? current;
+  final ui.PictureRecorder recorder = ui.PictureRecorder();
 
-  DrawingPainter(this.elenents, this.current);
+  CanvasPainter(this.elenents, this.current);
 
   @override
   void paint(Canvas canvas, Size size) {

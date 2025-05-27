@@ -1,17 +1,19 @@
 import 'dart:async';
 
-import 'package:flutter_app/canvas/data/canvas_object.dart';
-import 'package:flutter_app/canvas/data/canvas_repository.dart';
-import 'package:flutter_app/canvas/data/canvas_websocket_dto.dart';
-import 'package:flutter_app/common/logger.dart';
+import 'package:paint_app/auth/data/user.dart';
+import 'package:paint_app/canvas/data/canvas_object.dart';
+import 'package:paint_app/canvas/data/canvas_repository.dart';
+import 'package:paint_app/canvas/data/canvas_websocket_dto.dart';
+import 'package:paint_app/common/logger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CanvasCubit extends Cubit<WebsocketState> {
+  final User user;
   final CanvasRepository repository;
 
   StreamSubscription<CanvasWebsocketDto>? drawSubscription;
 
-  CanvasCubit({required this.repository})
+  CanvasCubit({required this.user, required this.repository})
     : super(const WebsocketState$Initial());
 
   void init() {

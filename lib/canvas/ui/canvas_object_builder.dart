@@ -1,73 +1,116 @@
-import 'dart:ui';
-
-import 'package:flutter/foundation.dart';
-import 'package:flutter_app/canvas/data/canvas_object.dart';
-import 'package:flutter_app/canvas/data/canvas_point.dart';
+import 'package:flutter/material.dart';
+import 'package:paint_app/canvas/data/canvas_object.dart';
+import 'package:paint_app/canvas/data/canvas_point.dart';
+import 'package:paint_app/common/consts.dart';
 
 class CanvasObjectBuilder extends ChangeNotifier {
-  CanvasObjectType _type;
+  CanvasObjectType _type = CanvasObjectType.line;
+  Color _color = Colors.black;
+  PaintingStyle _paintingStyle = PaintingStyle.fill;
+  double _lineWidth = defaultStrokeWidth;
 
-  Color? _color;
+  FontWeight _fontWeight;
+  double _fontSize = defaultFontSize;
+  FontStyle _fontStyle;
+
   //
+
+  String? text;
+
   Offset? initPoint;
   Offset? currentPoint;
-  //
-  double? lineWidth;
-  //
-  String? text;
-  FontWeight? fontWeight;
-  double? fontSize;
-  FontStyle? fontStyle;
 
   List<CanvasPoint> _linePonits = [];
 
-  CanvasObjectBuilder({required CanvasObjectType type}) : _type = type;
+  CanvasObjectBuilder({
+    CanvasObjectType type = CanvasObjectType.line,
+    PaintingStyle paintingStyle = PaintingStyle.fill,
+    double lineWidth = defaultStrokeWidth,
+    double fontSize = defaultFontSize,
+    FontWeight fontWeight = FontWeight.normal,
+    FontStyle fontStyle = FontStyle.normal,
+    Color color = Colors.black,
+  }) : _type = type,
+       _lineWidth = lineWidth,
+       _paintingStyle = paintingStyle,
+       _fontSize = fontSize,
+       _fontWeight = fontWeight,
+       _fontStyle = fontStyle,
+       _color = color;
 
   set type(CanvasObjectType value) {
     _type = value;
     notifyListeners();
   }
 
-  set color(Color? value) {
+  set color(Color value) {
     _color = value;
     notifyListeners();
   }
 
+  set lineWidth(double value) {
+    _lineWidth = value;
+    notifyListeners();
+  }
+
+  set paintingStyle(PaintingStyle value) {
+    _paintingStyle = value;
+    notifyListeners();
+  }
+
+  set fontWeight(FontWeight value) {
+    _fontWeight = value;
+    notifyListeners();
+  }
+
+  set fontSize(double value) {
+    _fontSize = value;
+    notifyListeners();
+  }
+
+  set fontStyle(FontStyle value) {
+    _fontStyle = value;
+    notifyListeners();
+  }
+
   CanvasObjectType get type => _type;
-  Color? get color => _color;
+  Color get color => _color;
+  double get lineWidth => _lineWidth;
+  PaintingStyle get paintingStyle => _paintingStyle;
+  FontWeight get fontWeight => _fontWeight;
+  double get fontSize => _fontSize;
+  FontStyle get fontStyle => _fontStyle;
 
   CanvasObject? build() {
     return switch (type) {
-      CanvasObjectType.line
-          when currentPoint != null && color != null && lineWidth != null =>
-        _buildLine(color: color!, width: lineWidth!, point: currentPoint!),
-      CanvasObjectType.rect
-          when initPoint != null && color != null && currentPoint != null =>
+      CanvasObjectType.line when currentPoint != null => _buildLine(
+        color: color,
+        width: lineWidth,
+        point: currentPoint!,
+      ),
+      CanvasObjectType.rect when initPoint != null && currentPoint != null =>
         _buildRect(
-          color: color!,
+          color: color,
           initPoint: initPoint!,
           currentPoint: currentPoint!,
+          paintingStyle: _paintingStyle,
+          strokeWidth: _lineWidth,
         ),
-      CanvasObjectType.circle
-          when initPoint != null && color != null && currentPoint != null =>
+      CanvasObjectType.circle when initPoint != null && currentPoint != null =>
         CanvasObject$Circle(
-          color: color!.toARGB32(),
+          color: color.toARGB32(),
           center: _toCanvasPoint(initPoint!),
           radius: (initPoint! - currentPoint!).distance,
+          paintingStyle: _toCanvasPaintingStyle(_paintingStyle),
+          strokeWidth: _lineWidth,
         ),
-      CanvasObjectType.text
-          when color != null &&
-              text != null &&
-              fontWeight != null &&
-              fontSize != null &&
-              fontStyle != null &&
-              currentPoint != null =>
+      CanvasObjectType.text when text != null && currentPoint != null =>
         _buildText(
-          color: color!,
+          color: color,
           text: text!,
-          fontSize: fontSize!,
-          fontStyle: fontStyle!,
-          fontWeight: fontWeight!,
+          fontSize: fontSize,
+          fontStyle: fontStyle,
+          fontWeight: fontWeight,
           offset: currentPoint!,
         ),
       _ => null,
@@ -76,6 +119,12 @@ class CanvasObjectBuilder extends ChangeNotifier {
 
   CanvasPoint _toCanvasPoint(Offset offset) =>
       CanvasPoint(x: offset.dx, y: offset.dy);
+
+  CanvasPaintingStyle _toCanvasPaintingStyle(PaintingStyle style) =>
+      switch (style) {
+        PaintingStyle.fill => CanvasPaintingStyle.fill,
+        PaintingStyle.stroke => CanvasPaintingStyle.stroke,
+      };
 
   void addPoint(Offset point) {
     _linePonits = List.of(_linePonits)..add(_toCanvasPoint(point));
@@ -103,6 +152,8 @@ class CanvasObjectBuilder extends ChangeNotifier {
     required Color color,
     required Offset initPoint,
     required Offset currentPoint,
+    required PaintingStyle paintingStyle,
+    required double strokeWidth,
   }) {
     final rect = Rect.fromPoints(initPoint, currentPoint);
     return CanvasObject$Rect(
@@ -110,6 +161,8 @@ class CanvasObjectBuilder extends ChangeNotifier {
       center: _toCanvasPoint(rect.center),
       width: rect.width,
       height: rect.height,
+      paintingStyle: _toCanvasPaintingStyle(paintingStyle),
+      strokeWidth: strokeWidth,
     );
   }
 
@@ -135,15 +188,15 @@ class CanvasObjectBuilder extends ChangeNotifier {
   }
 
   void clear() {
-    color = null;
+    color = Colors.black;
     initPoint = null;
     currentPoint = null;
     _linePonits = [];
-    lineWidth = null;
+    lineWidth = defaultStrokeWidth;
     text = null;
-    fontWeight = null;
-    fontSize = null;
-    fontStyle = null;
-    // textOffset = null;
+    fontWeight = FontWeight.normal;
+    fontSize = defaultFontSize;
+    fontStyle = FontStyle.normal;
+    _paintingStyle = PaintingStyle.fill;
   }
 }

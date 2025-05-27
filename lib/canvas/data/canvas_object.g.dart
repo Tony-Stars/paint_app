@@ -29,6 +29,11 @@ CanvasObject$Rect _$CanvasObject$RectFromJson(Map<String, dynamic> json) =>
       center: CanvasPoint.fromJson(json['center'] as Map<String, dynamic>),
       width: (json['width'] as num).toDouble(),
       height: (json['height'] as num).toDouble(),
+      paintingStyle: $enumDecode(
+        _$CanvasPaintingStyleEnumMap,
+        json['paintingStyle'],
+      ),
+      strokeWidth: (json['strokeWidth'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$CanvasObject$RectToJson(CanvasObject$Rect instance) =>
@@ -37,13 +42,25 @@ Map<String, dynamic> _$CanvasObject$RectToJson(CanvasObject$Rect instance) =>
       'center': instance.center,
       'width': instance.width,
       'height': instance.height,
+      'paintingStyle': _$CanvasPaintingStyleEnumMap[instance.paintingStyle]!,
+      'strokeWidth': instance.strokeWidth,
     };
+
+const _$CanvasPaintingStyleEnumMap = {
+  CanvasPaintingStyle.fill: 'fill',
+  CanvasPaintingStyle.stroke: 'stroke',
+};
 
 CanvasObject$Circle _$CanvasObject$CircleFromJson(Map<String, dynamic> json) =>
     CanvasObject$Circle(
       color: (json['color'] as num).toInt(),
       center: CanvasPoint.fromJson(json['center'] as Map<String, dynamic>),
       radius: (json['radius'] as num).toDouble(),
+      paintingStyle: $enumDecode(
+        _$CanvasPaintingStyleEnumMap,
+        json['paintingStyle'],
+      ),
+      strokeWidth: (json['strokeWidth'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$CanvasObject$CircleToJson(
@@ -52,6 +69,8 @@ Map<String, dynamic> _$CanvasObject$CircleToJson(
   'color': instance.color,
   'center': instance.center,
   'radius': instance.radius,
+  'paintingStyle': _$CanvasPaintingStyleEnumMap[instance.paintingStyle]!,
+  'strokeWidth': instance.strokeWidth,
 };
 
 CanvasObject$Text _$CanvasObject$TextFromJson(Map<String, dynamic> json) =>

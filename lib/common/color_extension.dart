@@ -6,5 +6,3 @@ extension Opacity on Color {
     return withAlpha((255.0 * opacity).round());
   }
 }
-
- 

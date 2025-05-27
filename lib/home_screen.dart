@@ -1,45 +1,46 @@
-import 'dart:developer';
+import 'dart:convert';
+import 'dart:html' as html;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_app/canvas/data/canvas_object.dart';
-import 'package:flutter_app/canvas/data/canvas_repository.dart';
-import 'package:flutter_app/canvas/ui/canvas_object_builder.dart';
-import 'package:flutter_app/canvas/ui/canvas_sidebar.dart';
-import 'package:flutter_app/canvas/ui/drawing_painter.dart';
-import 'package:flutter_app/elements/drawing_object.dart';
-import 'package:flutter_app/elements/to_drawing_object.dart';
-import 'package:flutter_app/text_editor.dart';
-import 'package:flutter_app/canvas/bloc/canvas_cubit.dart';
+import 'package:paint_app/auth/bloc/auth_cubit.dart';
+import 'package:paint_app/auth/data/user.dart';
+import 'package:paint_app/canvas/data/canvas_object.dart';
+import 'package:paint_app/canvas/data/canvas_repository.dart';
+import 'package:paint_app/canvas/ui/canvas_object_builder.dart';
+import 'package:paint_app/canvas/ui/canvas_drawer.dart';
+import 'package:paint_app/chat/ui/chat_dialog.dart';
+import 'package:paint_app/canvas/ui/canvas_painter.dart';
+import 'package:paint_app/canvas/elements/drawing_object.dart';
+import 'package:paint_app/canvas/ui/text_editor.dart';
+import 'package:paint_app/canvas/bloc/canvas_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:paint_app/common/consts.dart';
+// import 'package:web/web.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final User user;
+
+  const HomeScreen({super.key, required this.user});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final builder = CanvasObjectBuilder();
   final textController = TextEditingController();
 
-  Color selectedColor = Colors.black;
   DrawingShapeType? selectedBoxSpape;
-  double strokeWidth = 5;
+
+  bool toolsVisible = true;
+  bool chatVisible = false;
 
   var selectedTool = CanvasObjectType.line;
 
   // List<List<DrawingObject>> states = [[]];
   // var currentStateIndex = 0;
   CanvasObject? drawingElenent;
-  // Offset? initPoint; //  delete
-  // Offset? currentPoint; //  delete
-  final builder =
-      CanvasObjectBuilder(type: CanvasObjectType.line)
-        ..color = Colors.black
-        ..lineWidth = 5;
-
-  final shapes = DrawingShapeType.values;
 
   void drawText(
     FontWeight weight,
@@ -96,6 +97,16 @@ class _HomeScreenState extends State<HomeScreen> {
     // setState(() {});
   }
 
+  void openChat(BuildContext context) async {
+    final user = switch (context.read<AuthCubit>().state) {
+      AuthState$Authed authed => authed.user,
+      _ => null,
+    };
+    if (user != null) {
+      await ChatDialog.show(context, user: user);
+    }
+  }
+
   void clear(BuildContext context) {
     context.read<CanvasCubit>().clear();
     // currentStateIndex++;
@@ -118,6 +129,51 @@ class _HomeScreenState extends State<HomeScreen> {
   //     setState(() {});
   //   }
   // }
+
+  Future<ui.Image?> render(
+    BuildContext context,
+    List<CanvasObject> objects,
+  ) async {
+    final size = context.size;
+    if (size != null) {
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+      final painter = CanvasPainter(objects, null);
+      painter.paint(canvas, size);
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(
+        size.width.floor(),
+        size.height.floor(),
+      );
+      return image;
+    }
+
+    return Future.value(null);
+  }
+
+  Future<String?> canvasToBase64(
+    BuildContext context,
+    List<CanvasObject> objects,
+  ) async {
+    final image = await render(context, objects);
+    if (image != null) {
+      final data = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (data != null) {
+        final bytes = base64.encode(data.buffer.asUint8List());
+        // TODO refactoring
+        final anchor = html.AnchorElement(
+          href: 'data:application/octet-stream;base64,$bytes',
+        )..target = 'blank';
+        anchor.download = 'file.png';
+        html.document.body?.append(anchor);
+        anchor.click();
+        anchor.remove();
+
+        // return bytes;
+      }
+    }
+    return null;
+  }
 
   void onPanStart(DragStartDetails details) {
     builder.initPoint = details.localPosition;
@@ -149,13 +205,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final sessionId = DateTime.now().millisecondsSinceEpoch;
     final repository = CanvasRepository(
       sessionId: sessionId,
       uri: Uri.parse('ws://localhost:5000/'),
     );
     return BlocProvider(
-      create: (context) => CanvasCubit(repository: repository)..init(),
+      create:
+          (context) =>
+              CanvasCubit(user: widget.user, repository: repository)..init(),
       child: BlocBuilder<CanvasCubit, WebsocketState>(
         builder: (context, state) {
           return switch (state) {
@@ -166,156 +223,164 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             WebsocketState$Connected connected => Scaffold(
               backgroundColor: Colors.white,
-              body: Stack(
-                children: [
-                  GestureDetector(
-                    onPanStart: onPanStart,
-                    onPanUpdate: onPanUpdate,
-                    onPanEnd: (details) => onPanEnd(context, details),
-                    child: CustomPaint(
-                      painter: DrawingPainter(
-                        connected.canvasObjects,
-                        drawingElenent,
-                      ),
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height,
-                        width: MediaQuery.of(context).size.width,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    child: CanvasSidebar(builder: builder),
-                  ),
-                  Positioned(
-                    top: 40,
-                    right: 30,
-                    child: Row(
-                      children: [
-                        Slider(
-                          min: 0,
-                          max: 40,
-                          value: strokeWidth,
-                          onChanged: (val) {
-                            strokeWidth = val;
-                            builder.lineWidth = val;
-                            setState(() {});
-                          },
+              drawer: CanvasDrawer(builder: builder),
+              floatingActionButton: FloatingActionButton(
+                child: Icon(
+                  toolsVisible ? Icons.visibility : Icons.visibility_off,
+                ),
+                onPressed: () {
+                  toolsVisible = !toolsVisible;
+                  setState(() {});
+                },
+              ),
+              body: ListenableBuilder(
+                listenable: builder,
+                builder: (context, child) {
+                  return Stack(
+                    children: [
+                      GestureDetector(
+                        onPanStart: onPanStart,
+                        onPanUpdate: onPanUpdate,
+                        onPanEnd: (details) => onPanEnd(context, details),
+                        child: CustomPaint(
+                          painter: CanvasPainter(
+                            connected.canvasObjects,
+                            drawingElenent,
+                          ),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height,
+                            width: MediaQuery.of(context).size.width,
+                          ),
                         ),
-                        ElevatedButton.icon(
-                          onPressed: () => clear(context),
-                          icon: Icon(Icons.clear),
-                          label: const Text("Очистить доску"),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                    top: 100,
-                    right: 30,
-                    child: ColorPicker(
-                      hexInputBar: true,
-                      labelTypes: [],
-                      pickerColor: selectedColor,
-                      onColorChanged: (color) {
-                        selectedColor = color;
-                        builder.color = color;
-                        setState(() {});
-                      },
-                    ),
-                  ),
-                  if (selectedTool == CanvasObjectType.text)
-                    Positioned(
-                      bottom: 100,
-                      right: 30,
-                      child: TextEditor(
-                        controller: textController,
-                        color: selectedColor,
-                        onAdd:
-                            (weight, size, style) =>
-                                drawText(weight, size, style, null),
-                        onConfirm: () => stopDrawText(context),
                       ),
-                    ),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      color: Colors.grey[200],
-                      padding: EdgeInsets.all(10),
-                      child: SizedBox(
-                        height: 50,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            IconButton(
-                              onPressed: () {
-                                selectedBoxSpape = null;
-                                selectedTool = CanvasObjectType.line;
-                                builder.type = CanvasObjectType.line;
-                                setState(() {});
-                              },
-                              icon: Icon(
-                                Icons.edit,
-                                color:
-                                    selectedTool == CanvasObjectType.line
-                                        ? selectedColor
-                                        : Colors.grey,
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () {
-                                if (selectedTool == CanvasObjectType.text) {
-                                  selectedTool = CanvasObjectType.line;
-                                  builder.type = CanvasObjectType.line;
-                                } else {
-                                  selectedTool = CanvasObjectType.text;
-                                  builder.type = CanvasObjectType.text;
-                                }
+                      if (selectedTool == CanvasObjectType.text)
+                        Positioned(
+                          bottom: 100,
+                          right: 30,
+                          child: TextEditor(
+                            controller: textController,
+                            builder: builder,
+                            onAdd:
+                                (weight, size, style) =>
+                                    drawText(weight, size, style, null),
+                            onConfirm: () => stopDrawText(context),
+                          ),
+                        ),
+                      if (toolsVisible)
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            color: Colors.grey[200],
+                            padding: EdgeInsets.all(10),
+                            child: SizedBox(
+                              height: 50,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  IconButton(
+                                    tooltip: 'Настройки',
+                                    onPressed: () {
+                                      Scaffold.of(context).openDrawer();
+                                    },
+                                    icon: Icon(Icons.settings_outlined),
+                                  ),
+                                  IconButton(
+                                    tooltip: 'Кисточка',
+                                    onPressed: () {
+                                      selectedBoxSpape = null;
+                                      selectedTool = CanvasObjectType.line;
+                                      builder.type = CanvasObjectType.line;
+                                      setState(() {});
+                                    },
+                                    icon: Icon(
+                                      Icons.brush,
+                                      color:
+                                          selectedTool == CanvasObjectType.line
+                                              ? builder.color
+                                              : Colors.grey,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    tooltip: 'Текст',
+                                    onPressed: () {
+                                      if (selectedTool ==
+                                          CanvasObjectType.text) {
+                                        selectedTool = CanvasObjectType.line;
+                                        builder.type = CanvasObjectType.line;
+                                      } else {
+                                        selectedTool = CanvasObjectType.text;
+                                        builder.type = CanvasObjectType.text;
+                                      }
 
-                                setState(() {});
-                              },
-                              icon: Icon(
-                                Icons.abc,
-                                color:
-                                    selectedTool == CanvasObjectType.text
-                                        ? selectedColor
-                                        : Colors.grey,
+                                      setState(() {});
+                                    },
+                                    icon: Icon(
+                                      Icons.abc,
+                                      color:
+                                          selectedTool == CanvasObjectType.text
+                                              ? builder.color
+                                              : Colors.grey,
+                                    ),
+                                  ),
+                                  ...DrawingShapeType.values.map(
+                                    (shape) =>
+                                        _buildBoxShape(shape, builder.color),
+                                  ),
+                                  IconButton(
+                                    tooltip: 'Изображение',
+                                    onPressed: () async {
+                                      await canvasToBase64(
+                                        context,
+                                        connected.canvasObjects,
+                                      );
+                                    },
+                                    icon: Icon(Icons.image),
+                                  ),
+                                  IconButton(
+                                    tooltip: 'Чат',
+                                    onPressed: () => openChat(context),
+                                    icon: Icon(Icons.chat_rounded),
+                                  ),
+                                  IconButton(
+                                    tooltip: 'Очистить доску',
+                                    onPressed: () => clear(context),
+                                    icon: Icon(Icons.delete_outline),
+                                  ),
+                                  // TextButton(
+                                  //   onPressed: () {
+                                  //     Navigator.of(context).pushNamed('/test');
+                                  //   },
+                                  //   child: Text('test'),
+                                  // ),
+                                  // TextButton(
+                                  //   onPressed: () {
+                                  //     Navigator.of(context).pushNamed('/test2');
+                                  //   },
+                                  //   child: Text('test2'),
+                                  // ),
+                                  // IconButton(
+                                  //   onPressed: canBack ? () => back() : null,
+                                  //   color: Colors.green,
+                                  //   disabledColor: Colors.grey,
+                                  //   icon: Icon(Icons.arrow_back_rounded),
+                                  // ),
+                                  // IconButton(
+                                  //   onPressed: canForward ? () => forward() : null,
+                                  //   color: Colors.green,
+                                  //   disabledColor: Colors.grey,
+                                  //   icon: Icon(Icons.arrow_forward_outlined),
+                                  // ),
+                                ],
                               ),
                             ),
-                            ...shapes.map((shape) => _buildBoxShape(shape)),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pushNamed('/test');
-                              },
-                              child: Text('test'),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pushNamed('/test2');
-                              },
-                              child: Text('test2'),
-                            ),
-                            // IconButton(
-                            //   onPressed: canBack ? () => back() : null,
-                            //   color: Colors.green,
-                            //   disabledColor: Colors.grey,
-                            //   icon: Icon(Icons.arrow_back_rounded),
-                            // ),
-                            // IconButton(
-                            //   onPressed: canForward ? () => forward() : null,
-                            //   color: Colors.green,
-                            //   disabledColor: Colors.grey,
-                            //   icon: Icon(Icons.arrow_forward_outlined),
-                            // ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
-                ],
+                    ],
+                  );
+                },
               ),
             ),
           };
@@ -324,7 +389,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBoxShape(DrawingShapeType shape) {
+  Widget _buildBoxShape(DrawingShapeType shape, Color color) {
     bool isSelected = selectedBoxSpape == shape;
     return GestureDetector(
       onTap: () {
@@ -348,7 +413,7 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 40,
         width: 40,
         decoration: BoxDecoration(
-          color: isSelected ? selectedColor : Colors.grey,
+          color: isSelected ? color : Colors.grey,
           shape: switch (shape) {
             DrawingShapeType.circle => BoxShape.circle,
             DrawingShapeType.rectangle => BoxShape.rectangle,

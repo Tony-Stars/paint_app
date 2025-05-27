@@ -1,8 +1,8 @@
 import 'dart:ui' hide TextStyle;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_app/canvas/data/canvas_point.dart';
-import 'package:flutter_app/canvas/data/canvas_object.dart';
+import 'package:paint_app/canvas/data/canvas_point.dart';
+import 'package:paint_app/canvas/data/canvas_object.dart';
 
 sealed class DrawingObject {
   const DrawingObject();
@@ -23,16 +23,24 @@ class DrawingCircle extends DrawingObject {
   final Offset center;
   final double radius;
   final Color color;
+  final PaintingStyle paintingStyle;
+  final double strokeWidth;
 
-  const DrawingCircle({
+  DrawingCircle({
     required this.center,
     required this.radius,
     required this.color,
+    required this.paintingStyle,
+    required this.strokeWidth,
   });
 
   @override
   void draw(Canvas canvas, Size size) {
-    final paint = Paint()..color = color;
+    final paint =
+        Paint()
+          ..style = paintingStyle
+          ..strokeWidth = strokeWidth
+          ..color = color;
     canvas.drawCircle(center, radius, paint);
   }
 
@@ -42,23 +50,35 @@ class DrawingCircle extends DrawingObject {
       center: CanvasPoint(x: center.dx, y: center.dy),
       radius: radius,
       color: color.toARGB32(),
+      paintingStyle: switch (paintingStyle) {
+        PaintingStyle.fill => CanvasPaintingStyle.fill,
+        PaintingStyle.stroke => CanvasPaintingStyle.stroke,
+      },
+      strokeWidth: strokeWidth,
     );
   }
 }
 
 class DrawingRect extends DrawingObject {
   final Rect rect;
+  final PaintingStyle paintingStyle;
+  final double strokeWidth;
   final Color color;
 
-  const DrawingRect({required this.rect, required this.color});
+  DrawingRect({
+    required this.rect,
+    required this.paintingStyle,
+    required this.strokeWidth,
+    required this.color,
+  });
 
   @override
   void draw(Canvas canvas, Size size) {
     final paint =
         Paint()
           ..color = color
-          // ..style = PaintingStyle.stroke
-          // ..strokeWidth = 15
+          ..style = paintingStyle
+          ..strokeWidth = strokeWidth
           ..isAntiAlias = true;
     canvas.drawRect(rect, paint);
   }
@@ -70,6 +90,11 @@ class DrawingRect extends DrawingObject {
       width: rect.width,
       height: rect.height,
       color: color.toARGB32(),
+      paintingStyle: switch (paintingStyle) {
+        PaintingStyle.fill => CanvasPaintingStyle.fill,
+        PaintingStyle.stroke => CanvasPaintingStyle.stroke,
+      },
+      strokeWidth: strokeWidth,
     );
   }
 }

@@ -1,4 +1,4 @@
-import 'package:flutter_app/canvas/data/canvas_point.dart';
+import 'package:paint_app/canvas/data/canvas_point.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'canvas_object.g.dart';
@@ -33,18 +33,24 @@ class CanvasObject$Line extends CanvasObject {
   };
 }
 
+enum CanvasPaintingStyle { fill, stroke }
+
 @JsonSerializable()
 class CanvasObject$Rect extends CanvasObject {
   final int color;
   final CanvasPoint center;
   final double width;
   final double height;
+  final CanvasPaintingStyle paintingStyle;
+  final double? strokeWidth;
 
   const CanvasObject$Rect({
     required this.color,
     required this.center,
     required this.width,
     required this.height,
+    required this.paintingStyle,
+    required this.strokeWidth,
   });
 
   factory CanvasObject$Rect.fromJson(Map<String, dynamic> json) =>
@@ -62,11 +68,15 @@ class CanvasObject$Circle extends CanvasObject {
   final int color;
   final CanvasPoint center;
   final double radius;
+  final CanvasPaintingStyle paintingStyle;
+  final double? strokeWidth;
 
   const CanvasObject$Circle({
     required this.color,
     required this.center,
     required this.radius,
+    required this.paintingStyle,
+    required this.strokeWidth,
   });
 
   factory CanvasObject$Circle.fromJson(Map<String, dynamic> json) =>

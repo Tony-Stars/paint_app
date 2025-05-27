@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:flutter_app/canvas/data/canvas_object.dart';
-import 'package:flutter_app/canvas/data/canvas_object_dto.dart';
+import 'package:paint_app/canvas/data/canvas_object.dart';
+import 'package:paint_app/canvas/data/canvas_object_dto.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'canvas_websocket_dto.g.dart';

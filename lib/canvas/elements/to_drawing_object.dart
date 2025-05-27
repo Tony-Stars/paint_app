@@ -1,9 +1,9 @@
 import 'dart:ui';
 
-import 'package:flutter_app/canvas/data/canvas_object.dart';
-import 'package:flutter_app/canvas/data/canvas_point.dart';
-import 'package:flutter_app/elements/drawing_object.dart';
-import 'package:flutter_app/offset_utils.dart';
+import 'package:paint_app/canvas/data/canvas_object.dart';
+import 'package:paint_app/common/consts.dart';
+import 'package:paint_app/canvas/elements/drawing_object.dart';
+import 'package:paint_app/common/offset_utils.dart';
 
 extension ToDrawingObject on CanvasObject {
   DrawingObject toDrawingObject() {
@@ -22,11 +22,21 @@ extension ToDrawingObject on CanvasObject {
           width: object.width,
           height: object.height,
         ),
+        strokeWidth: object.strokeWidth ?? defaultStrokeWidth,
+        paintingStyle: switch (object.paintingStyle) {
+          CanvasPaintingStyle.fill => PaintingStyle.fill,
+          CanvasPaintingStyle.stroke => PaintingStyle.stroke,
+        },
         color: Color(object.color),
       ),
       CanvasObject$Circle object => DrawingCircle(
         center: object.center.toOffset(),
         radius: object.radius,
+        strokeWidth: object.strokeWidth ?? defaultStrokeWidth,
+        paintingStyle: switch (object.paintingStyle) {
+          CanvasPaintingStyle.fill => PaintingStyle.fill,
+          CanvasPaintingStyle.stroke => PaintingStyle.stroke,
+        },
         color: Color(object.color),
       ),
       CanvasObject$Text object => DrawingText(

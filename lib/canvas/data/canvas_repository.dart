@@ -1,8 +1,6 @@
-import 'dart:developer';
-
-import 'package:flutter_app/canvas/data/canvas_object.dart';
-import 'package:flutter_app/canvas/data/canvas_websocket_dto.dart';
-import 'package:flutter_app/common/websocket_wrapper.dart';
+import 'package:paint_app/canvas/data/canvas_object.dart';
+import 'package:paint_app/canvas/data/canvas_websocket_dto.dart';
+import 'package:paint_app/common/websocket_wrapper.dart';
 
 class CanvasRepository {
   final int sessionId;
