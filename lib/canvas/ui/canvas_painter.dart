@@ -2,7 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:paint_app/canvas/data/canvas_object.dart';
-import 'package:paint_app/canvas/elements/to_drawing_object.dart';
+import 'package:paint_app/canvas/ui/elements/to_drawing_object.dart';
 
 class CanvasPainter extends CustomPainter {
   final List<CanvasObject> elenents;

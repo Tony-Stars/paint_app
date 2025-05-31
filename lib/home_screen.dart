@@ -11,7 +11,7 @@ import 'package:paint_app/canvas/ui/canvas_object_builder.dart';
 import 'package:paint_app/canvas/ui/canvas_drawer.dart';
 import 'package:paint_app/chat/ui/chat_dialog.dart';
 import 'package:paint_app/canvas/ui/canvas_painter.dart';
-import 'package:paint_app/canvas/elements/drawing_object.dart';
+import 'package:paint_app/canvas/ui/elements/drawing_object.dart';
 import 'package:paint_app/canvas/ui/text_editor.dart';
 import 'package:paint_app/canvas/bloc/canvas_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

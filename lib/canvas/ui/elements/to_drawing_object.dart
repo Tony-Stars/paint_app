@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:paint_app/canvas/data/canvas_object.dart';
 import 'package:paint_app/common/consts.dart';
-import 'package:paint_app/canvas/elements/drawing_object.dart';
+import 'package:paint_app/canvas/ui/elements/drawing_object.dart';
 import 'package:paint_app/common/offset_utils.dart';
 
 extension ToDrawingObject on CanvasObject {
