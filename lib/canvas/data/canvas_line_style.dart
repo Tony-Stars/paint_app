@@ -1,0 +1,1 @@
+enum CanvasLineStyle { straight, arrow }

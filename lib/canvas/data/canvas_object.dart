@@ -1,9 +1,10 @@
+import 'package:paint_app/canvas/data/canvas_line_style.dart';
 import 'package:paint_app/canvas/data/canvas_point.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'canvas_object.g.dart';
 
-enum CanvasObjectType { line, rect, circle, text }
+enum CanvasObjectType { brush, line, rect, circle, text }
 
 sealed class CanvasObject {
   const CanvasObject();
@@ -12,15 +13,41 @@ sealed class CanvasObject {
 }
 
 @JsonSerializable()
-class CanvasObject$Line extends CanvasObject {
+class CanvasObject$Brush extends CanvasObject {
   final int color;
   final double width;
   final List<CanvasPoint> points;
 
-  const CanvasObject$Line({
+  const CanvasObject$Brush({
     required this.points,
     required this.color,
     required this.width,
+  });
+
+  factory CanvasObject$Brush.fromJson(Map<String, dynamic> json) =>
+      _$CanvasObject$BrushFromJson(json);
+
+  @override
+  Map<String, dynamic> toJson() => {
+    'type': CanvasObjectType.brush.name,
+    CanvasObjectType.brush.name: _$CanvasObject$BrushToJson(this),
+  };
+}
+
+@JsonSerializable()
+class CanvasObject$Line extends CanvasObject {
+  final CanvasLineStyle style;
+  final int color;
+  final double width;
+  final CanvasPoint from;
+  final CanvasPoint to;
+
+  const CanvasObject$Line({
+    required this.style,
+    required this.color,
+    required this.width,
+    required this.from,
+    required this.to,
   });
 
   factory CanvasObject$Line.fromJson(Map<String, dynamic> json) =>

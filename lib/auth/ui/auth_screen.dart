@@ -10,6 +10,8 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
+  final isLogin = true;
+
   final nameController = TextEditingController();
   final passwordController = TextEditingController();
 

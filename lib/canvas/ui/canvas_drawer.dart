@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:paint_app/canvas/data/canvas_line_style.dart';
 import 'package:paint_app/canvas/data/canvas_object.dart';
 import 'package:paint_app/canvas/ui/canvas_object_builder.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -79,6 +80,38 @@ class _CanvasDrawerState extends State<CanvasDrawer> {
                       setState(() {});
                     },
                   ),
+                  if (widget.builder.type == CanvasObjectType.line)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            widget.builder.lineStyle = CanvasLineStyle.straight;
+                          },
+                          icon: Icon(
+                            Icons.block,
+                            color:
+                                widget.builder.lineStyle ==
+                                        CanvasLineStyle.straight
+                                    ? widget.builder.color
+                                    : Colors.grey,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            widget.builder.lineStyle = CanvasLineStyle.arrow;
+                          },
+                          icon: Icon(
+                            Icons.arrow_right,
+                            color:
+                                widget.builder.lineStyle ==
+                                        CanvasLineStyle.arrow
+                                    ? widget.builder.color
+                                    : Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
                   if (widget.builder.type == CanvasObjectType.rect ||
                       widget.builder.type == CanvasObjectType.circle) ...[
                     Text('Стиль фигуры'),

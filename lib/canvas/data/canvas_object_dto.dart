@@ -8,6 +8,7 @@ part 'canvas_object_dto.g.dart';
 @JsonSerializable()
 class CanvasObjectDto {
   final CanvasObjectType type;
+  final CanvasObject$Brush? brush;
   final CanvasObject$Line? line;
   final CanvasObject$Rect? rect;
   final CanvasObject$Circle? circle;
@@ -15,6 +16,7 @@ class CanvasObjectDto {
 
   const CanvasObjectDto({
     required this.type,
+    required this.brush,
     required this.line,
     required this.rect,
     required this.circle,
@@ -33,6 +35,7 @@ class CanvasObjectDto {
   Map<String, dynamic> toJson() => _$CanvasObjectDtoToJson(this);
 
   CanvasObject toCanvasObject() => switch (type) {
+    CanvasObjectType.brush => brush!,
     CanvasObjectType.line => line!,
     CanvasObjectType.rect => rect!,
     CanvasObjectType.circle => circle!,

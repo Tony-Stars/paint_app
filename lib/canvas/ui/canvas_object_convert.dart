@@ -2,21 +2,25 @@ import 'dart:ui';
 
 import 'package:paint_app/canvas/data/canvas_object.dart';
 import 'package:paint_app/common/consts.dart';
-import 'package:paint_app/canvas/ui/elements/drawing_object.dart';
-import 'package:paint_app/common/offset_utils.dart';
+import 'package:paint_app/canvas/ui/canvas_paint_object.dart';
+import 'package:paint_app/canvas/ui/canvas_point_utils.dart';
 
-extension ToDrawingObject on CanvasObject {
-  DrawingObject toDrawingObject() {
+extension CanvasObjectConvert on CanvasObject {
+  CanvasPaintObject toPaintObject() {
     return switch (this) {
-      CanvasObject$Line object => DrawingLine(
-        poins:
-            object.points
-                .map((point) => DrawingPoint(point.toOffset()))
-                .toList(),
+      CanvasObject$Brush object => CanvasPaintObject$Brush(
+        poins: object.points.map((point) => point.toOffset()).toList(),
         width: object.width,
         color: Color(object.color),
       ),
-      CanvasObject$Rect object => DrawingRect(
+      CanvasObject$Line object => CanvasPaintObject$Line(
+        style: object.style,
+        from: object.from.toOffset(),
+        to: object.to.toOffset(),
+        width: object.width,
+        color: Color(object.color),
+      ),
+      CanvasObject$Rect object => CanvasPaintObject$Rect(
         rect: Rect.fromCenter(
           center: object.center.toOffset(),
           width: object.width,
@@ -29,7 +33,7 @@ extension ToDrawingObject on CanvasObject {
         },
         color: Color(object.color),
       ),
-      CanvasObject$Circle object => DrawingCircle(
+      CanvasObject$Circle object => CanvasPaintObject$Circle(
         center: object.center.toOffset(),
         radius: object.radius,
         strokeWidth: object.strokeWidth ?? defaultStrokeWidth,
@@ -39,7 +43,7 @@ extension ToDrawingObject on CanvasObject {
         },
         color: Color(object.color),
       ),
-      CanvasObject$Text object => DrawingText(
+      CanvasObject$Text object => CanvasPaintObject$Text(
         text: object.text,
         offset: object.offset.toOffset(),
         color: Color(object.color),

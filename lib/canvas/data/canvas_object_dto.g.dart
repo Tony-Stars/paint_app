@@ -10,6 +10,10 @@ CanvasObjectDto _$CanvasObjectDtoFromJson(
   Map<String, dynamic> json,
 ) => CanvasObjectDto(
   type: $enumDecode(_$CanvasObjectTypeEnumMap, json['type']),
+  brush:
+      json['brush'] == null
+          ? null
+          : CanvasObject$Brush.fromJson(json['brush'] as Map<String, dynamic>),
   line:
       json['line'] == null
           ? null
@@ -33,6 +37,7 @@ CanvasObjectDto _$CanvasObjectDtoFromJson(
 Map<String, dynamic> _$CanvasObjectDtoToJson(CanvasObjectDto instance) =>
     <String, dynamic>{
       'type': _$CanvasObjectTypeEnumMap[instance.type]!,
+      'brush': instance.brush,
       'line': instance.line,
       'rect': instance.rect,
       'circle': instance.circle,
@@ -40,6 +45,7 @@ Map<String, dynamic> _$CanvasObjectDtoToJson(CanvasObjectDto instance) =>
     };
 
 const _$CanvasObjectTypeEnumMap = {
+  CanvasObjectType.brush: 'brush',
   CanvasObjectType.line: 'line',
   CanvasObjectType.rect: 'rect',
   CanvasObjectType.circle: 'circle',

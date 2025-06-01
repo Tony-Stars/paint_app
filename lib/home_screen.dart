@@ -11,12 +11,12 @@ import 'package:paint_app/canvas/ui/canvas_object_builder.dart';
 import 'package:paint_app/canvas/ui/canvas_drawer.dart';
 import 'package:paint_app/chat/ui/chat_dialog.dart';
 import 'package:paint_app/canvas/ui/canvas_painter.dart';
-import 'package:paint_app/canvas/ui/elements/drawing_object.dart';
 import 'package:paint_app/canvas/ui/text_editor.dart';
 import 'package:paint_app/canvas/bloc/canvas_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:paint_app/common/consts.dart';
-// import 'package:web/web.dart';
+
+enum DrawingShapeType { rectangle, circle }
 
 class HomeScreen extends StatefulWidget {
   final User user;
@@ -36,24 +36,25 @@ class _HomeScreenState extends State<HomeScreen> {
   bool toolsVisible = true;
   bool chatVisible = false;
 
-  var selectedTool = CanvasObjectType.line;
-
   // List<List<DrawingObject>> states = [[]];
   // var currentStateIndex = 0;
   CanvasObject? drawingElenent;
 
   void drawText(
+    BuildContext context,
     FontWeight weight,
     double size,
     FontStyle style,
     Offset? offset,
   ) {
-    if (textController.text.isNotEmpty) {
-      final o = offset ?? Offset.zero;
+    final canvasSize = context.size;
+    if (textController.text.isNotEmpty && canvasSize != null) {
+      final currentPoint =
+          offset ?? Offset(canvasSize.width / 2, canvasSize.height / 2);
       builder.fontWeight = weight;
       builder.fontSize = size;
       builder.fontStyle = style;
-      builder.currentPoint = o;
+      builder.currentPoint = currentPoint;
       builder.text = textController.text;
       drawingElenent = builder.build();
       setState(() {});
@@ -61,9 +62,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void stopDraw(BuildContext context, Offset localPosition) {
-    if (selectedTool == CanvasObjectType.rect ||
-        selectedTool == CanvasObjectType.circle ||
-        selectedTool == CanvasObjectType.line) {
+    final tool = builder.type;
+    if (tool == CanvasObjectType.rect ||
+        tool == CanvasObjectType.circle ||
+        tool == CanvasObjectType.line ||
+        tool == CanvasObjectType.brush) {
       if (drawingElenent != null) {
         addElement(context, drawingElenent!);
       }
@@ -72,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void stopDrawText(BuildContext context) {
-    if (selectedTool == CanvasObjectType.text) {
+    if (builder.type == CanvasObjectType.text) {
       if (drawingElenent != null) {
         addElement(context, drawingElenent!);
         drawingElenent = null;
@@ -80,9 +83,8 @@ class _HomeScreenState extends State<HomeScreen> {
         builder.currentPoint = null;
 
         textController.clear();
-        selectedTool = CanvasObjectType.line;
 
-        builder.type = CanvasObjectType.line;
+        builder.type = CanvasObjectType.brush;
         setState(() {});
       }
     }
@@ -151,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Future.value(null);
   }
 
-  Future<String?> canvasToBase64(
+  Future<void> canvasToBase64(
     BuildContext context,
     List<CanvasObject> objects,
   ) async {
@@ -168,11 +170,8 @@ class _HomeScreenState extends State<HomeScreen> {
         html.document.body?.append(anchor);
         anchor.click();
         anchor.remove();
-
-        // return bytes;
       }
     }
-    return null;
   }
 
   void onPanStart(DragStartDetails details) {
@@ -253,7 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ),
-                      if (selectedTool == CanvasObjectType.text)
+                      if (builder.type == CanvasObjectType.text)
                         Positioned(
                           bottom: 100,
                           right: 30,
@@ -261,8 +260,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             controller: textController,
                             builder: builder,
                             onAdd:
-                                (weight, size, style) =>
-                                    drawText(weight, size, style, null),
+                                (weight, size, style) => drawText(
+                                  context,
+                                  weight,
+                                  size,
+                                  style,
+                                  null,
+                                ),
                             onConfirm: () => stopDrawText(context),
                           ),
                         ),
@@ -291,14 +295,28 @@ class _HomeScreenState extends State<HomeScreen> {
                                     tooltip: 'Кисточка',
                                     onPressed: () {
                                       selectedBoxSpape = null;
-                                      selectedTool = CanvasObjectType.line;
-                                      builder.type = CanvasObjectType.line;
+                                      builder.type = CanvasObjectType.brush;
                                       setState(() {});
                                     },
                                     icon: Icon(
                                       Icons.brush,
                                       color:
-                                          selectedTool == CanvasObjectType.line
+                                          builder.type == CanvasObjectType.brush
+                                              ? builder.color
+                                              : Colors.grey,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    tooltip: 'Линия',
+                                    onPressed: () {
+                                      selectedBoxSpape = null;
+                                      builder.type = CanvasObjectType.line;
+                                      setState(() {});
+                                    },
+                                    icon: Icon(
+                                      Icons.straight_outlined,
+                                      color:
+                                          builder.type == CanvasObjectType.line
                                               ? builder.color
                                               : Colors.grey,
                                     ),
@@ -306,12 +324,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   IconButton(
                                     tooltip: 'Текст',
                                     onPressed: () {
-                                      if (selectedTool ==
+                                      if (builder.type ==
                                           CanvasObjectType.text) {
-                                        selectedTool = CanvasObjectType.line;
-                                        builder.type = CanvasObjectType.line;
+                                        builder.type = CanvasObjectType.brush;
                                       } else {
-                                        selectedTool = CanvasObjectType.text;
                                         builder.type = CanvasObjectType.text;
                                       }
 
@@ -320,7 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     icon: Icon(
                                       Icons.abc,
                                       color:
-                                          selectedTool == CanvasObjectType.text
+                                          builder.type == CanvasObjectType.text
                                               ? builder.color
                                               : Colors.grey,
                                     ),
@@ -396,16 +412,13 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           if (isSelected) {
             selectedBoxSpape = null;
-            selectedTool = CanvasObjectType.line;
-            builder.type = CanvasObjectType.line;
+            builder.type = CanvasObjectType.brush;
           } else {
             selectedBoxSpape = shape;
-            final newTool = switch (shape) {
+            builder.type = switch (shape) {
               DrawingShapeType.rectangle => CanvasObjectType.rect,
               DrawingShapeType.circle => CanvasObjectType.circle,
             };
-            selectedTool = newTool;
-            builder.type = newTool;
           }
         });
       },
