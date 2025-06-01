@@ -1,3 +1,4 @@
+import 'package:paint_app/auth/data/user.dart';
 import 'package:paint_app/chat/data/chat_message.dart';
 import 'package:paint_app/chat/data/chat_websocket_dto.dart';
 import 'package:paint_app/common/websocket_wrapper.dart';
@@ -13,12 +14,14 @@ class ChatRepository {
   Stream<ChatWebsocketDto>? get stream =>
       websocket?.stream.map((event) => ChatWebsocketDto.fromString(event));
 
-  void connect({required String username}) {
+  void connect({required User user}) {
     websocket = WebsocketWrapper.connect(uri: uri);
     final dto = ChatWebsocketDto(
       sessionId: sessionId,
       method: ChatWebsocketMethod.connect,
-      data: ChatWebsocketData(connect: ChatConnectDto(username: username)),
+      data: ChatWebsocketData(
+        connect: ChatConnectDto(userId: user.id, username: user.username),
+      ),
     );
     websocket?.send(dto.toJson());
   }

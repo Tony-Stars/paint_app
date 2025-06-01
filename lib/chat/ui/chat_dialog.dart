@@ -39,7 +39,7 @@ class _ChatDialogState extends State<ChatDialog> {
       context.read<ChatCubit>().onMessage(
         ChatMessage(
           text: controller.text,
-          username: widget.user.name,
+          username: widget.user.username,
           userId: widget.user.id,
         ),
       );

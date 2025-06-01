@@ -10,21 +10,54 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final isLogin = true;
+  final isLogin = ValueNotifier(true);
 
-  final nameController = TextEditingController();
+  final usernameController = TextEditingController();
+  final loginController = TextEditingController();
   final passwordController = TextEditingController();
 
-  void login(BuildContext context) {
-    if (nameController.text.trim().isNotEmpty) {
-      context.read<AuthCubit>().login(name: nameController.text.trim());
-    }
+  void login(
+    BuildContext context, {
+    required String login,
+    required String password,
+  }) {
+    context.read<AuthCubit>().login(
+      login: login.trim(),
+      password: password.trim(),
+    );
   }
+
+  void register(
+    BuildContext context, {
+    required String login,
+    required String password,
+    required String username,
+  }) {
+    context.read<AuthCubit>().register(
+      login: login.trim(),
+      password: password.trim(),
+      username: username.trim(),
+    );
+  }
+
+  bool canLogin({required String login, required String password}) =>
+      login.trim().isNotEmpty && password.trim().isNotEmpty;
+
+  bool canRegister({
+    required String login,
+    required String password,
+    required String username,
+  }) =>
+      login.trim().isNotEmpty &&
+      password.trim().isNotEmpty &&
+      username.trim().isNotEmpty;
 
   @override
   void dispose() {
-    nameController.dispose();
+    loginController.dispose();
     passwordController.dispose();
+    usernameController.dispose();
+    isLogin.dispose();
     super.dispose();
   }
 
@@ -34,36 +67,102 @@ class _AuthScreenState extends State<AuthScreen> {
       body: Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: 500),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(bottom: 12),
-                child: TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(border: OutlineInputBorder()),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(bottom: 12),
-                child: TextField(
-                  controller: passwordController,
-                  decoration: InputDecoration(border: OutlineInputBorder()),
-                ),
-              ),
-              ValueListenableBuilder(
-                valueListenable: nameController,
-                builder: (context, value, child) {
-                  return ElevatedButton(
-                    onPressed:
-                        value.text.trim().isNotEmpty
-                            ? () => login(context)
-                            : null,
-                    child: Text('Войти'),
-                  );
-                },
-              ),
-            ],
+          child: ValueListenableBuilder(
+            valueListenable: isLogin,
+            builder: (context, value, child) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 12),
+                    child: TextField(
+                      controller: loginController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        label: Text('Логин'),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 12),
+                    child: TextField(
+                      controller: passwordController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        label: Text('Пароль'),
+                      ),
+                    ),
+                  ),
+                  if (!value)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: TextField(
+                        controller: usernameController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          label: Text('Имя пользователя'),
+                        ),
+                      ),
+                    ),
+                  ListenableBuilder(
+                    listenable: Listenable.merge([
+                      loginController,
+                      passwordController,
+                      usernameController,
+                    ]),
+                    builder: (context, child) {
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed:
+                                  value
+                                      ? canLogin(
+                                            login: loginController.text,
+                                            password: passwordController.text,
+                                          )
+                                          ? () => login(
+                                            context,
+                                            login: loginController.text,
+                                            password: passwordController.text,
+                                          )
+                                          : null
+                                      : () {
+                                        isLogin.value = true;
+                                      },
+                              child: Text('Войти'),
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed:
+                                  !value
+                                      ? canRegister(
+                                            login: loginController.text,
+                                            password: passwordController.text,
+                                            username: usernameController.text,
+                                          )
+                                          ? () => register(
+                                            context,
+                                            login: loginController.text,
+                                            password: passwordController.text,
+                                            username: usernameController.text,
+                                          )
+                                          : null
+                                      : () {
+                                        isLogin.value = false;
+                                      },
+                              child: Text('Зарегистрироваться'),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),

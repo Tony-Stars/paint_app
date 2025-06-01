@@ -9,14 +9,14 @@ class ChatMessage {
   final String username;
   // final DateTime sent_at;
 
-  factory ChatMessage.fromJson(Map<String, dynamic> json) =>
-      _$ChatMessageFromJson(json);
-
-  ChatMessage({
+  const ChatMessage({
     required this.text,
     required this.userId,
     required this.username,
   });
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) =>
+      _$ChatMessageFromJson(json);
 
   Map<String, dynamic> toJson() => _$ChatMessageToJson(this);
 }

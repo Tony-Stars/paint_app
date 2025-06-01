@@ -49,7 +49,10 @@ Map<String, dynamic> _$ChatWebsocketDataToJson(ChatWebsocketData instance) =>
     };
 
 ChatConnectDto _$ChatConnectDtoFromJson(Map<String, dynamic> json) =>
-    ChatConnectDto(username: json['username'] as String);
+    ChatConnectDto(
+      userId: (json['userId'] as num).toInt(),
+      username: json['username'] as String,
+    );
 
 Map<String, dynamic> _$ChatConnectDtoToJson(ChatConnectDto instance) =>
-    <String, dynamic>{'username': instance.username};
+    <String, dynamic>{'userId': instance.userId, 'username': instance.username};

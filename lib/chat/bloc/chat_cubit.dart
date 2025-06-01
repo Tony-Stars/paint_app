@@ -18,7 +18,7 @@ class ChatCubit extends Cubit<ChatState> {
 
   void init() {
     try {
-      repository.connect(username: user.name);
+      repository.connect(user: user);
       subscription = repository.stream?.listen(
         _mapChatWebsocketEvent,
         onError: (error) {

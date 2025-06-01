@@ -44,9 +44,10 @@ class ChatWebsocketData {
 
 @JsonSerializable()
 class ChatConnectDto {
+  final int userId;
   final String username;
 
-  const ChatConnectDto({required this.username});
+  const ChatConnectDto({required this.userId, required this.username});
 
   factory ChatConnectDto.fromJson(Map<String, dynamic> json) =>
       _$ChatConnectDtoFromJson(json);
